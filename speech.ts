@@ -8,7 +8,6 @@ import {
   CancellationReason,
   AudioStreamFormat,
   SpeechSynthesizer,
-  // SpeechSynthesisOutputFormat
 } from "microsoft-cognitiveservices-speech-sdk";
 
 const speechConfig = SpeechConfig.fromSubscription(
@@ -71,9 +70,6 @@ export const initializeTextToSpeech = ({
   synthesizer.speakTextAsync(
     text,
     (result) => {
-      if (result) {
-        console.log(`Audio data streamed.`);
-      }
       synthesizer.close();
 
       onAudioRecieved(result.audioData);
