@@ -20,6 +20,15 @@
         socket.emit("audioData", wav);
       };
 
+      const play = async (data) => {
+        const context = new AudioContext();
+        const buffer = await context.decodeAudioData(data);
+        const source = context.createBufferSource();
+        source.buffer = buffer;
+        source.connect(context.destination);
+        source.start();
+      };
+
       // Function to handle streaming audio data to the backend
       function streamAudioData() {
         socket = io("http://localhost:4200");
@@ -39,6 +48,13 @@
 
         // Connect the script processor to the audio destination
         scriptProcessor.connect(audioContext.destination);
+
+        // Handle returning audio data
+        socket.on("audioData", (buffer) => {
+          console.log(buffer);
+
+          play(buffer);
+        });
       }
 
       // Start recording when the "Start Recording" button is clicked
