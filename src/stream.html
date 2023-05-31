@@ -1,0 +1,80 @@
+<!DOCTYPE html>
+<html>
+  <body>
+    <button id="start">Start Recording</button>
+    <button id="stop">Stop Recording</button>
+
+    <script src="https://cdn.jsdelivr.net/npm/audiobuffer-to-wav@1.0.0/index.min.js"></script>
+    <script type="module">
+      import { io } from "https://cdn.socket.io/4.4.1/socket.io.esm.min.js";
+
+      // Connect to the WebSocket endpoint
+      let socket;
+      let scriptProcessor;
+      let stream; // Store the stream object
+
+      const handleAudioProcess = (event) => {
+        const wav = audioBufferToWav(event.inputBuffer);
+
+        // Send the audio data to the backend via the WebSocket connection
+        socket.emit("audioData", wav);
+      };
+
+      // Function to handle streaming audio data to the backend
+      function streamAudioData() {
+        socket = io("http://localhost:4200");
+
+        // Create a Web Audio context
+        const audioContext = new AudioContext();
+        const audioSource = audioContext.createMediaStreamSource(stream);
+
+        // Create a script processor node to process audio data
+        scriptProcessor = audioContext.createScriptProcessor(undefined, 1, 1);
+
+        // Connect the audio source to the script processor
+        audioSource.connect(scriptProcessor);
+
+        // Create an event listener for the script processor's audio processing event
+        scriptProcessor.addEventListener("audioprocess", handleAudioProcess);
+
+        // Connect the script processor to the audio destination
+        scriptProcessor.connect(audioContext.destination);
+      }
+
+      // Start recording when the "Start Recording" button is clicked
+      document.getElementById("start").addEventListener("click", () => {
+        navigator.mediaDevices
+          .getUserMedia({ audio: true })
+          .then((mediaStream) => {
+            // Store the stream object
+            stream = mediaStream;
+
+            // Start streaming audio data
+            streamAudioData();
+          })
+          .catch((error) => {
+            console.error("Error accessing microphone:", error);
+          });
+      });
+
+      // Stop recording when the "Stop Recording" button is clicked
+      document.getElementById("stop").addEventListener("click", () => {
+        if (socket) {
+          // Stop the media stream tracks
+          stream.getTracks().forEach((track) => {
+            track.stop();
+          });
+
+          scriptProcessor.removeEventListener(
+            "audioprocess",
+            handleAudioProcess
+          );
+          scriptProcessor.disconnect();
+
+          // Emit a stop recording event to the backend
+          socket.emit("stopRecording");
+        }
+      });
+    </script>
+  </body>
+</html>
