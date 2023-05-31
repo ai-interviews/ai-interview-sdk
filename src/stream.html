@@ -8,10 +8,9 @@
     <script type="module">
       import { io } from "https://cdn.socket.io/4.4.1/socket.io.esm.min.js";
 
-      // Connect to the WebSocket endpoint
       let socket;
       let scriptProcessor;
-      let stream; // Store the stream object
+      let stream;
 
       const handleAudioProcess = (event) => {
         const wav = audioBufferToWav(event.inputBuffer);
@@ -33,20 +32,15 @@
       function streamAudioData() {
         socket = io("http://localhost:4200");
 
-        // Create a Web Audio context
         const audioContext = new AudioContext();
         const audioSource = audioContext.createMediaStreamSource(stream);
 
-        // Create a script processor node to process audio data
         scriptProcessor = audioContext.createScriptProcessor(undefined, 1, 1);
 
-        // Connect the audio source to the script processor
         audioSource.connect(scriptProcessor);
 
-        // Create an event listener for the script processor's audio processing event
         scriptProcessor.addEventListener("audioprocess", handleAudioProcess);
 
-        // Connect the script processor to the audio destination
         scriptProcessor.connect(audioContext.destination);
 
         // Handle returning audio data
@@ -62,7 +56,6 @@
         navigator.mediaDevices
           .getUserMedia({ audio: true })
           .then((mediaStream) => {
-            // Store the stream object
             stream = mediaStream;
 
             // Start streaming audio data
@@ -76,7 +69,6 @@
       // Stop recording when the "Stop Recording" button is clicked
       document.getElementById("stop").addEventListener("click", () => {
         if (socket) {
-          // Stop the media stream tracks
           stream.getTracks().forEach((track) => {
             track.stop();
           });
