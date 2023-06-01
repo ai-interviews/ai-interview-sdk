@@ -1,15 +1,8 @@
 import { io } from "https://cdn.socket.io/4.4.1/socket.io.esm.min.js";
+import { audioBufferToWav } from "./factory.js";
 
 let socket;
-let scriptProcessor;
 let stream;
-
-const handleAudioProcess = (event) => {
-  const wav = audioBufferToWav(event.inputBuffer);
-
-  // Send the audio data to the backend via the WebSocket connection
-  socket.emit("audioData", wav);
-};
 
 const play = async (data) => {
   const context = new AudioContext();
@@ -21,19 +14,39 @@ const play = async (data) => {
 };
 
 // Function to handle streaming audio data to the backend
-function streamAudioData() {
+async function streamAudioData() {
   socket = io("http://localhost:4200");
 
   const audioContext = new AudioContext();
+  await audioContext.audioWorklet.addModule("audio-worklet-processor.js");
   const audioSource = audioContext.createMediaStreamSource(stream);
+  const audioWorkletNode = new AudioWorkletNode(
+    audioContext,
+    "audio-worklet-processor"
+  );
 
-  scriptProcessor = audioContext.createScriptProcessor(undefined, 1, 1);
+  // Listen to the messages from your AudioWorkletProcessor
+  audioWorkletNode.port.onmessage = (event) => {
+    // Create a new AudioBuffer and fill it with the data received from the AudioWorkletProcessor
+    const audioBuffer = audioContext.createBuffer(
+      2,
+      event.data[0].length,
+      audioContext.sampleRate
+    );
 
-  audioSource.connect(scriptProcessor);
+    // Fill the AudioBuffer with the Float32Array data received from the AudioWorkletProcessor
+    audioBuffer.copyToChannel(event.data[0], 0);
+    audioBuffer.copyToChannel(event.data[1], 1);
 
-  scriptProcessor.addEventListener("audioprocess", handleAudioProcess);
+    // Now you can use this audioBuffer
+    const wav = audioBufferToWav(audioBuffer);
 
-  scriptProcessor.connect(audioContext.destination);
+    // Send the audio data to the backend via the WebSocket connection
+    socket.emit("audioData", wav);
+  };
+
+  audioSource.connect(audioWorkletNode);
+  audioWorkletNode.connect(audioContext.destination);
 
   // Handle returning audio data
   socket.on("audioData", (buffer) => {
@@ -60,15 +73,10 @@ document.getElementById("start").addEventListener("click", () => {
 
 // Stop recording when the "Stop Recording" button is clicked
 document.getElementById("stop").addEventListener("click", () => {
-  if (socket) {
-    stream.getTracks().forEach((track) => {
-      track.stop();
-    });
+  stream?.getTracks().forEach((track) => {
+    track.stop();
+  });
 
-    scriptProcessor.removeEventListener("audioprocess", handleAudioProcess);
-    scriptProcessor.disconnect();
-
-    // Emit a stop recording event to the backend
-    socket.emit("stopRecording");
-  }
+  // Emit a stop recording event to the backend
+  socket?.emit("stopRecording");
 });

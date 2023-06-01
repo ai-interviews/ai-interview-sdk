@@ -21,7 +21,7 @@ export const initializeSpeechToText = ({
   onSpeechRecognized: (text: string) => void;
 }) => {
   const pushStream = AudioInputStream.createPushStream(
-    AudioStreamFormat.getWaveFormatPCM(48000, 16, 1)
+    AudioStreamFormat.getWaveFormatPCM(48000, 16, 2)
   );
 
   const audioConfig = AudioConfig.fromStreamInput(pushStream);

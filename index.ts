@@ -23,6 +23,9 @@ io.on("connection", (socket) => {
   // Conversational chain allows us to start a conversation with history
   const chain = initializeOpenAi();
 
+  // Initialize speech recognition
+  // Audio stream from the frontend directed into pushStream in this file
+  // speechRecognizer applies speech recognition on data from pushStream
   const { pushStream, speechRecognizer } = initializeSpeechToText({
     onSpeechRecognized: (text) => {
       (async () => {
@@ -46,12 +49,13 @@ io.on("connection", (socket) => {
     },
   });
 
-  // Start accepting streams of speech
+  // Start speech recognition
   speechRecognizer.startContinuousRecognitionAsync(() => {
     console.log("Speech recognition started.");
   });
 
   socket.on("audioData", (data: ArrayBuffer) => {
+    // console.log(data);
     pushStream.write(data);
   });
 
