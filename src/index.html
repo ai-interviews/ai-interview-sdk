@@ -4,38 +4,7 @@
     <button id="start">Start Recording</button>
     <button id="stop">Stop Recording</button>
 
-    <script>
-      let chunks = [];
-      let blobAudio;
-
-      const startButton = document.getElementById("start");
-      const stopButton = document.getElementById("stop");
-
-      startButton.onclick = async () => {
-        try {
-          const stream = await navigator.mediaDevices.getUserMedia({
-            audio: true,
-          });
-          const mediaRecorder = new MediaRecorder(stream);
-
-          mediaRecorder.ondataavailable = function (e) {
-            chunks.push(e.data);
-          };
-
-          stopButton.onclick = function () {
-            mediaRecorder.stop();
-          };
-
-          mediaRecorder.onstop = function () {
-            blobAudio = new Blob(chunks, { type: "audio/ogg; codecs=opus" });
-            chunks = [];
-          };
-
-          mediaRecorder.start();
-        } catch (err) {
-          console.log("getUserMedia error: ", err);
-        }
-      };
-    </script>
+    <script src="https://cdn.jsdelivr.net/npm/audiobuffer-to-wav@1.0.0/index.min.js"></script>
+    <script type="module" src="index.js"></script>
   </body>
 </html>
