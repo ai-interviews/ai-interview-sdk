@@ -1,0 +1,48 @@
+{
+  "parser": "@typescript-eslint/parser",
+  "plugins": ["typescript", "import", "prettier"],
+  "extends": ["prettier", "typescript", "plugin:import/errors", "plugin:import/warnings", "plugin:import/typescript"],
+  "rules": {
+    "no-irregular-whitespace": ["error", { "skipComments": true }],
+    "no-console": "error",
+    "require-await": "error",
+
+    "no-shadow": "off",
+    "no-return-await": "off",
+    "no-await-in-loop": "off",
+    "no-restricted-syntax": "off",
+    "no-loop-func": "off",
+    "no-useless-constructor": "off",
+    "no-restricted-globals": "off",
+    "symbol-description": "off",
+    "class-methods-use-this": "off",
+    "no-labels": "off",
+    "no-continue": "off",
+    "no-extra-label": "off",
+    "consistent-return": "off",
+    "no-unneeded-ternary": "off",
+    "max-classes-per-file": "off",
+    "no-multi-str": "off",
+    "operator-assignment": "off",
+    "spaced-comment": "off",
+    "no-use-before-define": "off",
+    "camelcase": "off",
+
+    "prettier/prettier": "error",
+
+    "import/no-unresolved": "error",
+    "import/extensions": "off",
+    "import/no-extraneous-dependencies": "off",
+    "import/prefer-default-export": "off",
+
+    "require-jsdoc": "off",
+
+    "@typescript-eslint/no-unused-vars": ["error", { "argsIgnorePattern": "^_" }],
+    "@typescript-eslint/no-non-null-assertion": "off",
+    "@typescript-eslint/explicit-function-return-type": "off",
+    "@typescript-eslint/explicit-module-boundary-types": "off",
+    "@typescript-eslint/no-explicit-any": "off",
+    "@typescript-eslint/camelcase": "off",
+    "@typescript-eslint/no-empty-interface": "off"
+  }
+}

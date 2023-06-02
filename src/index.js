@@ -13,7 +13,7 @@ const play = async (data) => {
   source.start();
 };
 
-// Function to handle streaming audio data to the backend
+// Handle streaming audio data to the backend
 async function streamAudioData() {
   socket = io("http://localhost:4200");
 
@@ -38,10 +38,9 @@ async function streamAudioData() {
     audioBuffer.copyToChannel(event.data[0], 0);
     audioBuffer.copyToChannel(event.data[1], 1);
 
-    // Now you can use this audioBuffer
     const wav = audioBufferToWav(audioBuffer);
 
-    // Send the audio data to the backend via the WebSocket connection
+    // Stream the audio data to server
     socket.emit("audioData", wav);
   };
 
@@ -63,7 +62,6 @@ document.getElementById("start").addEventListener("click", () => {
     .then((mediaStream) => {
       stream = mediaStream;
 
-      // Start streaming audio data
       streamAudioData();
     })
     .catch((error) => {
@@ -77,6 +75,6 @@ document.getElementById("stop").addEventListener("click", () => {
     track.stop();
   });
 
-  // Emit a stop recording event to the backend
+  // Tell the backend to stop listening
   socket?.emit("stopRecording");
 });
