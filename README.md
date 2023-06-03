@@ -10,18 +10,22 @@ Local testing instructions. Make sure you have [node](https://nodejs.org/en/down
 
 ## Directory structure
 
-Root folder
+#### `server` directory
 
-- `index.ts` is the main entry point for the server
+Express server that handles incoming socket connection from SDK and all conversational logic. To be deployed.
+
+- `index.ts` is the main entry point
 - `openai.ts` initializes the chat SDK and provides a helper
 - `speech.ts` initializes the Azure Speech SDK and provides helpers
 
-src folder
+#### `sdk` directory
 
-- `index.html` webpage for testing
-- `index.js` initial client recording and WebSocket functionality (to be updated and moved)
-- `factory.js` includes functionality to convert `webm` audio chunks to `wav`
-- `audio-worklet-processor.js` process and format the incoming audio stream
+Code for the SDK to be integrated into any web platform. This calls our own server. To be published on NPM directory.
+
+- `index.ts` export Interview class for SDK usage
+- `audioBufferToWav.ts` helper to convert `webm` audio chunks to `wav`
+- `audio-worklet-processor.js` handle and pass on chunks of the incoming audio stream
+- `__tests__` for unit tests to be added to (not yet started)
 
 ## Process diagram
 
