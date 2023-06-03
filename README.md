@@ -1,5 +1,9 @@
 ## AI interview bot
 
+Early phase (still in development) of JavaScript interview browser SDK to run AI-powered interviews
+
+## Environment Setup
+
 Local testing instructions. Make sure you have [node](https://nodejs.org/en/download) installed on your machine first.
 
 1. Clone the repo
