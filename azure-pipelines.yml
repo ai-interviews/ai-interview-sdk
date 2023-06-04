@@ -12,10 +12,10 @@ variables:
   azureSubscription: 'acc4029d-ee6a-44f3-bd18-c0546a2b36f0'
 
   # Web app name
-  webAppName: ''
+  webAppName: 'ai-interviewer-msip'
 
   # Environment name
-  environmentName: ''
+  environmentName: 'Development'
 
   # Agent VM image name
   vmImageName: 'ubuntu-latest'
