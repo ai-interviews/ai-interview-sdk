@@ -11,7 +11,7 @@ import {
 } from "microsoft-cognitiveservices-speech-sdk";
 
 const speechConfig = SpeechConfig.fromSubscription(
-  process.env.AZURE_CONGITIVE_SERVICES_SPEECH_KEY!,
+  process.env.AZURE_COGNITIVE_SERVICES_SPEECH_KEY!,
   "eastus"
 );
 
