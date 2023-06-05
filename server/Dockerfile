@@ -7,9 +7,6 @@ WORKDIR /usr/src/app
 # Copy package.json and package-lock.json to workdir
 COPY package*.json ./
 
-# Copy the .env file to the Docker image
-COPY .env ./
-
 # Install dependencies
 RUN npm install
 
