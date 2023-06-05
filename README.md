@@ -4,13 +4,19 @@ Early phase (still in development) of JavaScript interview browser SDK to run AI
 
 ## Environment Setup
 
-Local testing instructions. Make sure you have [node](https://nodejs.org/en/download) installed on your machine first.
+Local testing instructions. Make sure you have [node](https://nodejs.org/en/download) installed on your machine first and have the repo cloned.
 
-1. Clone the repo
-2. Open terminal and navigate to root directory
-3. Run `npm install`
-4. Run `nodemon index.ts`
-5. Run `http-server src`
+**Test the SDK**
+
+1. Create a new Node.js project
+2. Run `npm install <path/to/sdk>`
+3. Import the `Interview` class from `ai-interview-sdk`
+
+**Run the server**
+
+1. Open terminal and navigate to `server` directory
+2. Run `npm install`
+3. Run `nodemon index.ts`
 
 ## Directory structure
 
