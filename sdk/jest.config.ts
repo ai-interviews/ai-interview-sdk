@@ -19,38 +19,39 @@
 // console.log('Type checking is disabled during Jest for performance reasons, use `jest typecheck` when necessary.');
 
 module.exports = {
-  rootDir: '/Users/ralph/Desktop/Code/intern_project_proto/sdk',
+  rootDir: '.',
   roots: ['<rootDir>'],
   cache: true,
   verbose: true,
   cacheDirectory: '<rootDir>/tmp/jest',
-  moduleFileExtensions: ['js', 'json', 'ts', 'tsx'],
+  moduleFileExtensions: ['js', 'json', 'ts', 'tsx', 'mjs'],
   testMatch: ['**/__tests__/*.test.(ts|tsx)'],
   testPathIgnorePatterns: ['/node_modules/', '/tmp/', '/coverage/', '/stories/', '/\\.storybook/'],
   watchPathIgnorePatterns: ['/node_modules/'],
   automock: false,
   unmockedModulePathPatterns: ['/node_modules/'],
-  collectCoverage: true,
-  collectCoverageFrom: ['**/*.{ts,tsx}', '!**/*.d.ts', '!**/node_modules/**'],
-  coveragePathIgnorePatterns: ['/node_modules/', '\\.json$', '/__tests__/', '/stories/', '/\\.storybook/'],
-  transformIgnorePatterns: ['/node_modules/(?!(lodash-es|antd|[^/]+/es|rc-animate|rc-util)/).*'],
+  // collectCoverage: true,
+  // collectCoverageFrom: ['**/*.{ts,tsx}', '!**/*.d.ts', '!**/node_modules/**'],
+  // coveragePathIgnorePatterns: ['/node_modules/', '\\.json$', '/__tests__/', '/stories/', '/\\.storybook/'],
+  // transformIgnorePatterns: ['/node_modules/(?!(lodash-es|antd|[^/]+/es|rc-animate|rc-util)/).*'],
   transform: {
-    '\\.(ts|tsx)$': [
-      'ts-jest',
-      {
-        tsconfig: '/Users/ralph/Desktop/Code/intern_project_proto/sdk/tsconfig.json',
-        diagnostics: false,
-        isolatedModules: true,
-      },
-    ],
-    '/node_modules/((lodash-es|[^/]+/es)|rc-animate|rc-util)/.*': [
-      'ts-jest',
-      {
-        tsconfig: '/Users/ralph/Desktop/Code/intern_project_proto/sdk/tsconfig.json',
-        diagnostics: false,
-        isolatedModules: true,
-      },
-    ],
+    // '\\.(ts|tsx)$': [
+    //   'ts-jest',
+    //   {
+    //     tsconfig: './tsconfig.json',
+    //     diagnostics: false,
+    //     isolatedModules: true,
+    //   },
+    // ],
+    // '/node_modules/((lodash-es|[^/]+/es)|rc-animate|rc-util)/.*': [
+    //   'ts-jest',
+    //   {
+    //     tsconfig: './tsconfig.json',
+    //     diagnostics: false,
+    //     isolatedModules: true,
+        
+    //   },
+    // ],
   },
   preset: 'ts-jest',
 };

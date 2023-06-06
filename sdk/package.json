@@ -4,9 +4,9 @@
   "scripts": {
     "test": "jest --detectOpenHandles",
     "typecheck": "tsc --project ./tsconfig-typecheck.json",
-    "lint": "eslint 'src/**/*.{ts,tsx}'",
+    "lint": "eslint \"src/**/*.{ts,tsx}\"",
     "format": "prettier --write 'src/**/*.{ts,tsx}'",
-    "build": "./scripts/build.sh",
+    "build": "bash ./scripts/build.sh",
     "prepublish": "npm run build"
   },
   "main": "dist/index.js",
