@@ -2,6 +2,11 @@ import { io, Socket } from 'socket.io-client';
 import { audioBufferToWav } from './audioBufferToWav';
 import initLogger, { Logger } from 'pino';
 
+export type MetricsData = {
+  wordCount: Record<string, number>;
+  answerTimesSeconds: number[];
+};
+
 export class Interview {
   private socket?: Socket;
   private stream?: MediaStream;
@@ -68,6 +73,14 @@ export class Interview {
     }
   }
 
+  public finishedSpeaking() {
+    try {
+      this.socket.emit('finishedSpeaking');
+    } catch (error) {
+      this.logger.error('Error emitting finished speaking signal:', error);
+    }
+  }
+
   public async begin() {
     try {
       const mediaStream = await navigator.mediaDevices.getUserMedia({ audio: true });
@@ -78,7 +91,7 @@ export class Interview {
     }
   }
 
-  public stop() {
+  public end() {
     try {
       if (!this.streaming || !this.stream || !this.socket) {
         throw Error('No session is in progress.');
@@ -88,6 +101,10 @@ export class Interview {
 
       this.stream.getTracks().forEach(track => {
         track.stop();
+      });
+
+      this.socket.on('metrics', (data: MetricsData) => {
+        this.logger.info(data);
       });
 
       // Tell the backend to stop listening
