@@ -16,6 +16,7 @@
     "typescript": "^5.0.4"
   },
   "scripts": {
-    "start": "nodemon index.ts"
-  }
+    "start": "nodemon src/index.ts"
+  },
+  "type": "module"
 }

@@ -1,0 +1,24 @@
+{
+  "compilerOptions": {
+    "outDir": "dist/",
+    "sourceMap": true,
+    "module": "es2022",
+    "moduleResolution": "Node",
+    "noEmitOnError": true,
+    "target": "es2022",
+    "declaration": true,
+    "removeComments": false,
+    "noImplicitAny": true,
+    "forceConsistentCasingInFileNames": true,
+    // "noUnusedLocals": true,
+    "pretty": true,
+    "esModuleInterop": true,
+    "noEmit": true,
+    "allowImportingTsExtensions": true,
+    "lib": ["DOM"]
+  },
+  "ts-node": {
+    "esm": true
+  },
+  "include": ["src", "constants"]
+}

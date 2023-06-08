@@ -7,6 +7,7 @@ import {
 import { ChatOpenAI } from "langchain/chat_models/openai";
 import { ConversationChain } from "langchain/chains";
 import { BufferMemory } from "langchain/memory";
+import { SYSTEM_PROMPT } from "./constants/prompt.ts";
 
 const chat = new ChatOpenAI({
   openAIApiKey: process.env.OPENAI_API_KEY,
@@ -15,19 +16,27 @@ const chat = new ChatOpenAI({
 
 // Remember conversation history
 const chatPrompt = ChatPromptTemplate.fromPromptMessages([
-  SystemMessagePromptTemplate.fromTemplate(
-    "The following is a friendly conversation between a human and an AI. The AI is concise in its responses, and does not ramble."
-  ),
+  SystemMessagePromptTemplate.fromTemplate(SYSTEM_PROMPT),
   new MessagesPlaceholder("history"),
   HumanMessagePromptTemplate.fromTemplate("{input}"),
 ]);
 
-export const initializeOpenAi = () => {
+export const initializeOpenAi = (): ConversationChain => {
   const chain = new ConversationChain({
     memory: new BufferMemory({ returnMessages: true, memoryKey: "history" }),
     prompt: chatPrompt,
     llm: chat,
   });
-
   return chain;
+};
+
+export const callOpenAi = async (
+  chain: ConversationChain,
+  input: string
+): Promise<string> => {
+  const completion = await chain.call({
+    input,
+  });
+
+  return completion.response as string;
 };

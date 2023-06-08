@@ -1,4 +1,3 @@
-import { ConversationChain } from "langchain/dist/chains/conversation";
 import {
   SpeechConfig,
   AudioInputStream,
@@ -17,8 +16,10 @@ const speechConfig = SpeechConfig.fromSubscription(
 
 export const initializeSpeechToText = ({
   onSpeechRecognized,
+  onSpeechRecognizing,
 }: {
   onSpeechRecognized: (text: string) => void;
+  onSpeechRecognizing?: () => void;
 }) => {
   const pushStream = AudioInputStream.createPushStream(
     AudioStreamFormat.getWaveFormatPCM(48000, 16, 2)
@@ -36,6 +37,8 @@ export const initializeSpeechToText = ({
     }
   };
 
+  speechRecognizer.recognizing = () => {};
+
   speechRecognizer.canceled = (s, e) => {
     console.log(`CANCELED: Reason=${e.errorDetails}`);
 
@@ -46,14 +49,14 @@ export const initializeSpeechToText = ({
     speechRecognizer.stopContinuousRecognitionAsync();
   };
 
-  speechRecognizer.speechEndDetected = (s, e) => {
-    console.log("Speech has stopped being detected");
-  };
+  // speechRecognizer.speechEndDetected = (s, e) => {
+  //   console.log("Speech has stopped being detected");
+  // };
 
   return { pushStream, speechRecognizer };
 };
 
-export const initializeTextToSpeech = ({
+export const textToSpeech = ({
   text,
   onAudioRecieved,
 }: {
@@ -62,8 +65,7 @@ export const initializeTextToSpeech = ({
 }) => {
   // Configure resulting voice
   speechConfig.speechSynthesisLanguage = "en-US";
-  speechConfig.speechSynthesisVoiceName = "en-US-JennyNeural";
-  // speechConfig.outputFormat = SpeechSynthesisOutputFormat.aud
+  speechConfig.speechSynthesisVoiceName = "en-AU-TimNeural";
 
   const synthesizer = new SpeechSynthesizer(speechConfig);
 
