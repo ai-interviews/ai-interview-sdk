@@ -10,8 +10,8 @@ resources:
 
 variables:
   # Container registry service connection established during pipeline creation
-  dockerRegistryServiceConnection: '64ddf928-e9b2-4ada-8f1c-c1d9f3062a99'
-  imageRepository: 'serveraiinterviewinstance'
+  dockerRegistryServiceConnection: '8b961963-5da7-4181-bac8-a29220aa066c'
+  imageRepository: 'aiinterviewsaiinterviewsdk'
   containerRegistry: 'servertestcont.azurecr.io'
   dockerfilePath: '$(Build.SourcesDirectory)/server/Dockerfile'
   tag: '$(Build.BuildId)'
