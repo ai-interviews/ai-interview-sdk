@@ -37,7 +37,7 @@ export const initializeSpeechToText = ({
     }
   };
 
-  speechRecognizer.recognizing = () => {};
+  speechRecognizer.recognizing = (s, e) => onSpeechRecognizing?.();
 
   speechRecognizer.canceled = (s, e) => {
     console.log(`CANCELED: Reason=${e.errorDetails}`);
@@ -49,12 +49,20 @@ export const initializeSpeechToText = ({
     speechRecognizer.stopContinuousRecognitionAsync();
   };
 
-  // speechRecognizer.speechEndDetected = (s, e) => {
-  //   console.log("Speech has stopped being detected");
-  // };
-
   return { pushStream, speechRecognizer };
 };
+
+const generateSsml = (text: string) => `
+  <speak version="1.0" xmlns="https://www.w3.org/2001/10/synthesis" xmlns:mstts="https://www.w3.org/2001/mstts" xml:lang="en-US">
+    <voice name="en-US-DavisNeural">
+      <mstts:express-as style="cheerful" styledegree="1">
+        <prosody rate="+10.00%">
+          ${text}
+        </prosody>
+      </mstts:express-as>
+    </voice>
+  </speak>
+`;
 
 export const textToSpeech = ({
   text,
@@ -63,14 +71,10 @@ export const textToSpeech = ({
   text: string;
   onAudioRecieved: (audioData: ArrayBuffer) => void;
 }) => {
-  // Configure resulting voice
-  speechConfig.speechSynthesisLanguage = "en-US";
-  speechConfig.speechSynthesisVoiceName = "en-AU-TimNeural";
-
   const synthesizer = new SpeechSynthesizer(speechConfig);
 
-  synthesizer.speakTextAsync(
-    text,
+  synthesizer.speakSsmlAsync(
+    generateSsml(text),
     (result) => {
       synthesizer.close();
 

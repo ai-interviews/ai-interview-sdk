@@ -19,11 +19,10 @@ const io = new Server(server, {
 io.on("connection", async (socket) => {
   console.log("A client connected");
 
-  const metrics = new Metrics();
-
   // Conversational chain allows us to start a conversation with history
   const chain = initializeOpenAi();
 
+  const metrics = new Metrics();
   const interviewer = new Interviewer({
     chain,
     numQuestions: 3,
@@ -45,7 +44,7 @@ io.on("connection", async (socket) => {
   let candidateResponse = "";
   const { pushStream, speechRecognizer } = initializeSpeechToText({
     onSpeechRecognized: (candidateResponseFragment) => {
-      candidateResponse += candidateResponseFragment;
+      candidateResponse += " " + candidateResponseFragment;
     },
     onSpeechRecognizing: () => {
       metrics.startAnswerTimer();
@@ -64,6 +63,11 @@ io.on("connection", async (socket) => {
   socket.on("finishedSpeaking", async () => {
     if (!candidateResponse.length) {
       await new Promise((resolve) => setTimeout(resolve, 2000));
+    }
+
+    if (!candidateResponse.length) {
+      console.log("No speech detected.");
+      return;
     }
 
     metrics.endAnswerTimer();
