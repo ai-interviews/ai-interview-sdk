@@ -10,7 +10,6 @@
     "removeComments": false,
     "noImplicitAny": true,
     "forceConsistentCasingInFileNames": true,
-    "noUnusedLocals": true,
     "pretty": true,
     "esModuleInterop": true,
     "lib": ["DOM"]

@@ -55,10 +55,10 @@ export class Interview {
         audioBuffer.copyToChannel(event.data[0], 0);
         audioBuffer.copyToChannel(event.data[1], 1);
 
-        const wav = audioBufferToWav(audioBuffer);
+        const wavBuffer = audioBufferToWav(audioBuffer);
 
         // Stream audio data chunk to server
-        this.socket.emit('audioData', wav);
+        this.socket.emit('audioData', wavBuffer);
       };
 
       audioSource.connect(audioWorkletNode);

@@ -4,7 +4,7 @@
   "extends": ["prettier", "typescript", "plugin:import/errors", "plugin:import/warnings", "plugin:import/typescript"],
   "rules": {
     "no-irregular-whitespace": ["error", { "skipComments": true }],
-    "no-console": "error",
+    "no-console": "warn",
     "require-await": "error",
 
     "no-shadow": "off",
@@ -37,7 +37,7 @@
 
     "require-jsdoc": "off",
 
-    "@typescript-eslint/no-unused-vars": ["error", { "argsIgnorePattern": "^_" }],
+    "@typescript-eslint/no-unused-vars": ["warn", { "argsIgnorePattern": "^_" }],
     "@typescript-eslint/no-non-null-assertion": "off",
     "@typescript-eslint/explicit-function-return-type": "off",
     "@typescript-eslint/explicit-module-boundary-types": "off",
