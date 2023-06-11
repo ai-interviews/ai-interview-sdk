@@ -2,8 +2,8 @@ import "dotenv/config";
 import express from "express";
 import { Server } from "socket.io";
 import { createServer } from "http";
-import { initializeOpenAi } from "./openai.ts";
-import { initializeSpeechToText, textToSpeech } from "./speech.ts";
+import { initializeOpenAi } from "./lib/openai.ts";
+import { initializeSpeechToText, textToSpeech } from "./lib/speech.ts";
 import { Interviewer } from "./lib/interviewer.ts";
 import { Metrics } from "./lib/metrics.ts";
 
@@ -19,28 +19,22 @@ const io = new Server(server, {
 io.on("connection", async (socket) => {
   console.log("A client connected");
 
-  // Conversational chain allows us to start a conversation with history
-  const chain = initializeOpenAi();
-
   const metrics = new Metrics();
   const interviewer = new Interviewer({
-    chain,
-    numQuestions: 3,
+    numRequiredQuestions: 3,
     candidateName: "Ralph",
   });
 
   await interviewer.init();
 
-  textToSpeech({
+  // Ask ice-breaker question to candidate
+  const openerAudioData = textToSpeech({
     text: await interviewer.getNextQuestion(""),
-    onAudioRecieved: (audioData) => {
-      socket.emit("audioData", audioData);
-    },
   });
 
-  // Initialize speech recognition
-  // Audio stream from the frontend directed into pushStream in this file
-  // speechRecognizer applies speech recognition on data from pushStream
+  socket.emit("audioData", openerAudioData);
+
+  // Audio stream from the frontend to be directed into pushStream
   let candidateResponse = "";
   const { pushStream, speechRecognizer } = initializeSpeechToText({
     onSpeechRecognized: (candidateResponseFragment) => {
@@ -70,20 +64,23 @@ io.on("connection", async (socket) => {
       return;
     }
 
+    // Track metrics from this response
     metrics.endAnswerTimer();
     metrics.trackWordsFromResponse(candidateResponse);
 
     console.log("PROMPT:", candidateResponse);
-    const response = await interviewer.getNextQuestion(candidateResponse);
-    console.log("RESPONSE:", response);
 
-    textToSpeech({
-      text: response,
-      onAudioRecieved: (audioData) => {
-        socket.emit("audioData", audioData);
-      },
-    });
+    const nextQuestionForCandidate = await interviewer.getNextQuestion(
+      candidateResponse
+    );
 
+    console.log("RESPONSE:", nextQuestionForCandidate);
+
+    const audioData = textToSpeech({ text: nextQuestionForCandidate });
+
+    socket.emit("audioData", audioData);
+
+    // Reset candidate response
     candidateResponse = "";
   });
 
@@ -93,8 +90,8 @@ io.on("connection", async (socket) => {
       console.log("Speech recognition stopped.");
     });
 
+    // Send metrics to client
     const { wordCount, answerTimesSeconds } = metrics;
-
     socket.emit("metrics", { wordCount, answerTimesSeconds });
 
     socket.disconnect();

@@ -14,6 +14,14 @@ const speechConfig = SpeechConfig.fromSubscription(
   "eastus"
 );
 
+/**
+ *
+ * @param onSpeechRecognized Callback is called when a completed phrase has been recognized.
+ * @param onSpeechRecognizing Callback is called as words are being recognized.
+ * @returns Object with:
+ * - pushStream to write binary audio chunks to
+ * - speechRecognizer to begin and end speech recognition
+ */
 export const initializeSpeechToText = ({
   onSpeechRecognized,
   onSpeechRecognizing,
@@ -52,6 +60,36 @@ export const initializeSpeechToText = ({
   return { pushStream, speechRecognizer };
 };
 
+/**
+ *
+ * @param text Text to convert into speech
+ * @returns Binary audio data
+ */
+export const textToSpeech = async ({
+  text,
+}: {
+  text: string;
+}): Promise<ArrayBuffer> => {
+  const synthesizer = new SpeechSynthesizer(speechConfig);
+
+  return new Promise((resolve, reject) => {
+    synthesizer.speakSsmlAsync(
+      generateSsml(text),
+      (result) => {
+        synthesizer.close();
+
+        resolve(result.audioData);
+      },
+      (error) => {
+        console.log(error);
+        synthesizer.close();
+
+        reject(error);
+      }
+    );
+  });
+};
+
 const generateSsml = (text: string) => `
   <speak version="1.0" xmlns="https://www.w3.org/2001/10/synthesis" xmlns:mstts="https://www.w3.org/2001/mstts" xml:lang="en-US">
     <voice name="en-US-DavisNeural">
@@ -63,26 +101,3 @@ const generateSsml = (text: string) => `
     </voice>
   </speak>
 `;
-
-export const textToSpeech = ({
-  text,
-  onAudioRecieved,
-}: {
-  text: string;
-  onAudioRecieved: (audioData: ArrayBuffer) => void;
-}) => {
-  const synthesizer = new SpeechSynthesizer(speechConfig);
-
-  synthesizer.speakSsmlAsync(
-    generateSsml(text),
-    (result) => {
-      synthesizer.close();
-
-      onAudioRecieved(result.audioData);
-    },
-    (error) => {
-      console.log(error);
-      synthesizer.close();
-    }
-  );
-};

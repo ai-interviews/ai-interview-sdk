@@ -1,64 +1,117 @@
 import { ConversationChain } from "langchain/chains";
-import { STAR_METHOD_QUESTIONS } from "../constants/questions.ts";
-import { callOpenAi } from "../openai.ts";
-import { RESUME_PROMPT } from "../constants/prompt.ts";
+import { Questions } from "../constants/questions.ts";
+import { callOpenAi, initializeOpenAi } from "./openai.ts";
+import { Prompts } from "../constants/prompts.ts";
 
-const FOLLOW_UP_QUESTION = "follow-up";
+/**
+ *
+ * @param array Array of strings to be shuffled
+ * @returns New array with same strings in a different order
+ */
+const shuffle = (array: string[]) => {
+  let currentIndex = array.length;
+
+  // While there remain elements to shuffle.
+  while (currentIndex != 0) {
+    // Pick a remaining element.
+    const randomIndex = Math.floor(Math.random() * currentIndex);
+    currentIndex--;
+
+    // And swap it with the current element.
+    [array[currentIndex], array[randomIndex]] = [
+      array[randomIndex],
+      array[currentIndex],
+    ];
+  }
+
+  return array;
+};
 
 export class Interviewer {
+  // Used to call OpenAI
   private chain: ConversationChain;
-  private numQuestions: number;
+
+  // Number of required questions to pull from question bank
+  private numRequiredQuestions: number;
+
+  // Question bank of possible questions for interviewer to ask
   private questionBank: string[];
+
+  // Index of question to ask next
   private currentQuestionIndex: number;
+
+  // List of questions (in-order) that interviewer will ask
+  // These are chosen internally (see init()), partly by LLM and from questionBank at random
   private questions: string[];
+
+  // LLM will refer to candidate by name if provided
   private candidateName?: string;
 
+  /**
+   *
+   * @param numRequiredQuestions Number of required questions to pull from question bank
+   * @param questions If provided, will override default question bank
+   * @param candidateName Interviewer will refer to candidate by name if provided
+   */
   public constructor({
-    chain,
-    numQuestions,
+    numRequiredQuestions,
     questions,
     candidateName,
   }: {
-    chain: ConversationChain;
-    numQuestions: number;
+    numRequiredQuestions: number;
     questions?: string[];
     candidateName?: string;
   }) {
-    this.chain = chain;
-    this.numQuestions = numQuestions;
-    this.questionBank = questions || STAR_METHOD_QUESTIONS;
+    this.numRequiredQuestions = numRequiredQuestions;
+    this.questionBank = shuffle(questions || Questions.STAR_METHOD);
     this.candidateName = candidateName;
     this.currentQuestionIndex = 0;
+    this.chain = initializeOpenAi();
   }
 
+  /**
+   * Must be called before interview begins. Prepares a list of questions, including:
+   * - Introductory questions
+   * - A required number from the question bank
+   * - AI generated follow up questions
+   */
   public async init() {
-    const resumeQuestion = await callOpenAi(this.chain, RESUME_PROMPT);
+    const resumeQuestion = await callOpenAi(
+      this.chain,
+      Prompts.GENERATE_RESUME_QUESTION
+    );
 
     // prettier-ignore
     this.questions = [
-      `Hey ${this.candidateName ? this.candidateName : ""}, thanks for joining me today. How're you doing?`,
-      "That's good to hear! I'm doing alright myself, lot's of interviews today but keeping up with the pace. So, here's the plan for today's interview: we'll start with some introductions, dive into questions about your resume, explore your past experiences, and leave room for any questions you may have. Sound good?",
-      "Great. So to give you a bit of background about myself, I've been working in HR for over a decade. I started my career in HR when I graduated from the University of Washington, but I quickly transitioned to a more focused role in technical recruitment, and I've been at Company Inc. for two years now where I've been able to collaborate with the other teams and identify candidates who I think would fit well here. So, why don't you tell me a little about yourself before we get started?",
-      FOLLOW_UP_QUESTION,
+      Questions.getOpener(this.candidateName),
+      shuffle(Questions.INTERVIEW_LAYOUT)[0],
+      shuffle(Questions.INTRO)[0],
+      Questions.FOLLOW_UP,
       resumeQuestion,
     ];
 
-    for (let i = 0; i < this.numQuestions; i++) {
-      this.questions.push(this.questionBank[i], FOLLOW_UP_QUESTION);
+    // Add the number of required question-bank questions at random
+    for (let i = 0; i < this.numRequiredQuestions; i++) {
+      this.questions.push(this.questionBank[i], Questions.FOLLOW_UP);
     }
   }
 
+  /**
+   *
+   * @param candidateResponse Previous response from candidate
+   * @returns AI generated comment on the candidate's response, followed by either:
+   * - An AI generated follow up question
+   * - A question from the question bank
+   */
   private async generateResponse(candidateResponse: string): Promise<string> {
-    let fullResponse = "";
+    const isFollowUpQuestionGeneratedByOpenAi =
+      this.questions[this.currentQuestionIndex] === Questions.FOLLOW_UP;
 
-    const shouldAskFollowUp =
-      this.questions[this.currentQuestionIndex] === FOLLOW_UP_QUESTION;
+    const prompt = isFollowUpQuestionGeneratedByOpenAi
+      ? Prompts.GENERATE_FOLLOW_UP_QUESTION
+      : Prompts.GENERATE_FOLLOW_UP_COMMENT;
 
-    const prompt = shouldAskFollowUp
-      ? "Now generate a comment with a follow up question about their response."
-      : "Now generate ONLY a comment.";
-
-    const response = await callOpenAi(
+    const openAiResponse = await callOpenAi(
       this.chain,
       `
         Interviewer: "${this.questions[this.currentQuestionIndex - 1]}"
@@ -67,16 +120,27 @@ export class Interviewer {
       `
     );
 
-    if (shouldAskFollowUp) {
-      fullResponse = response;
+    let fullResponse = "";
+
+    if (isFollowUpQuestionGeneratedByOpenAi) {
+      fullResponse = openAiResponse;
     } else {
-      fullResponse = response + this.questions[this.currentQuestionIndex];
+      fullResponse = openAiResponse + this.questions[this.currentQuestionIndex];
     }
 
     return fullResponse;
   }
 
+  /**
+   *
+   * @param candidateResponse Candidate's response to the previous question
+   * @returns The next question for the interviewer to ask
+   */
   public async getNextQuestion(candidateResponse: string) {
+    if (this.currentQuestionIndex === this.questions.length) {
+      return;
+    }
+
     if (this.currentQuestionIndex <= 2) {
       return this.questions[this.currentQuestionIndex++];
     }
