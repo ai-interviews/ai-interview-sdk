@@ -27,7 +27,7 @@ io.on("connection", async (socket) => {
   await interviewer.init();
 
   // Ask ice-breaker question to candidate
-  const openerAudioData = textToSpeech({
+  const openerAudioData = await textToSpeech({
     text: await interviewer.getNextQuestion(""),
   });
 
