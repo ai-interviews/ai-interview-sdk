@@ -2,7 +2,6 @@ import "dotenv/config";
 import express from "express";
 import { Server } from "socket.io";
 import { createServer } from "http";
-import { initializeOpenAi } from "./lib/openai.ts";
 import { initializeSpeechToText, textToSpeech } from "./lib/speech.ts";
 import { Interviewer } from "./lib/interviewer.ts";
 import { Metrics } from "./lib/metrics.ts";

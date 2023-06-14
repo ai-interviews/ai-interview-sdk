@@ -73,6 +73,10 @@ export class Interview {
     }
   }
 
+  public isActive() {
+    return this.streaming;
+  }
+
   public finishedSpeaking() {
     try {
       this.socket.emit('finishedSpeaking');
