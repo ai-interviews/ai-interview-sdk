@@ -90,6 +90,7 @@ export class Interview {
       const mediaStream = await navigator.mediaDevices.getUserMedia({ audio: true });
       this.stream = mediaStream;
       this.streamAudioData();
+      this.streaming = true;
     } catch (error) {
       this.logger.error('Error beginning interview session:', error);
     }
