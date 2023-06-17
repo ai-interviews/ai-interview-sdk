@@ -2,9 +2,34 @@ import { io, Socket } from 'socket.io-client';
 import { audioBufferToWav } from './audioBufferToWav';
 import initLogger, { Logger } from 'pino';
 
-export type MetricsData = {
+type InterviewMetricsEventData = {
   wordCount: Record<string, number>;
   answerTimesSeconds: number[];
+};
+
+type ResponseMetricsEventData = {
+  wordCount: Record<string, number>;
+  answerTimeSeconds: number;
+};
+
+export type AudioEventData = {
+  text: string;
+  buffer: ArrayBuffer;
+};
+
+type SpeechRecognizedEventData = {
+  text: string;
+};
+
+type ConstructorCallbacks = {
+  onAudio?: (data: AudioEventData) => void;
+  onSpeechRecognized?: (text: string) => void;
+  onResponseMetrics?: (metrics: ResponseMetricsEventData) => void;
+  onInterviewMetrics?: (metrics: InterviewMetricsEventData) => void;
+};
+
+type ConstructorOptions = {
+  automaticAudioPlayback?: boolean;
 };
 
 export class Interview {
@@ -12,10 +37,40 @@ export class Interview {
   private stream?: MediaStream;
   private logger: Logger;
   private streaming: boolean;
+  private handleSocketEvents: (socket: Socket) => void;
 
-  constructor() {
+  constructor(
+    { onAudio, onSpeechRecognized, onResponseMetrics, onInterviewMetrics }: ConstructorCallbacks = {},
+    { automaticAudioPlayback = true }: ConstructorOptions = {},
+  ) {
     this.logger = initLogger();
     this.streaming = false;
+
+    this.handleSocketEvents = socket => {
+      // Handle metrics at the end of each candidate response
+      socket.on('responseMetrics', (data: ResponseMetricsEventData) => {
+        onResponseMetrics?.(data);
+      });
+
+      // Handle metrics at the end of the interview
+      socket.on('interviewMetrics', (data: InterviewMetricsEventData) => {
+        onInterviewMetrics?.(data);
+      });
+
+      // Handle candidate speech recognized by server
+      socket.on('speechRecognized', (data: SpeechRecognizedEventData) => {
+        onSpeechRecognized?.(data.text);
+      });
+
+      // Handle returning audio data from server
+      socket.on('audio', (data: AudioEventData) => {
+        onAudio(data);
+
+        if (automaticAudioPlayback) {
+          this.playAudio(data.buffer);
+        }
+      });
+    };
   }
 
   private async playAudio(audioData: ArrayBuffer) {
@@ -64,10 +119,7 @@ export class Interview {
       audioSource.connect(audioWorkletNode);
       audioWorkletNode.connect(audioContext.destination);
 
-      // Handle returning audio data from server
-      this.socket.on('audioData', audioBuffer => {
-        this.playAudio(audioBuffer);
-      });
+      this.streaming = true;
     } catch (error) {
       this.logger.error('Error streaming audio data:', error);
     }
@@ -87,10 +139,15 @@ export class Interview {
 
   public async begin() {
     try {
-      const mediaStream = await navigator.mediaDevices.getUserMedia({ audio: true });
-      this.stream = mediaStream;
-      this.streamAudioData();
-      this.streaming = true;
+      this.stream = await navigator.mediaDevices.getUserMedia({ audio: true });
+
+      await this.streamAudioData();
+
+      if (!this.socket) {
+        throw Error('Socket connection not established.');
+      }
+
+      this.handleSocketEvents(this.socket);
     } catch (error) {
       this.logger.error('Error beginning interview session:', error);
     }
@@ -106,10 +163,6 @@ export class Interview {
 
       this.stream.getTracks().forEach(track => {
         track.stop();
-      });
-
-      this.socket.on('metrics', (data: MetricsData) => {
-        this.logger.info(data);
       });
 
       // Tell the backend to stop listening

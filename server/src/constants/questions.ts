@@ -21,7 +21,6 @@ export class Questions {
 
   // First question to ask candidate
   public static getOpener = (candidateName?: string) =>
-    `Hey ${
-      candidateName || ""
-    }, thanks for joining me today. How're you doing?`;
+    // prettier-ignore
+    `Hey ${candidateName || ""}, thanks for joining me today. How're you doing?`;
 }

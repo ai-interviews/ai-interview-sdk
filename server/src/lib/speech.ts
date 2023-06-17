@@ -27,7 +27,7 @@ export const initializeSpeechToText = ({
   onSpeechRecognizing,
 }: {
   onSpeechRecognized: (text: string) => void;
-  onSpeechRecognizing?: () => void;
+  onSpeechRecognizing?: (text: string) => void;
 }) => {
   const pushStream = AudioInputStream.createPushStream(
     AudioStreamFormat.getWaveFormatPCM(48000, 16, 2)
@@ -45,7 +45,14 @@ export const initializeSpeechToText = ({
     }
   };
 
-  speechRecognizer.recognizing = (s, e) => onSpeechRecognizing?.();
+  speechRecognizer.recognizing = (s, e) => {
+    if (
+      e.result.reason === ResultReason.RecognizingSpeech &&
+      e.result.text.length > 1
+    ) {
+      onSpeechRecognizing?.(e.result.text);
+    }
+  };
 
   speechRecognizer.canceled = (s, e) => {
     console.log(`CANCELED: Reason=${e.errorDetails}`);

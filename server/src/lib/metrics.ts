@@ -23,13 +23,14 @@ export class Metrics {
   public endAnswerTimer() {
     const endTime = new Date();
 
-    this.answerTimesSeconds.push(
-      Math.round(
-        Math.floor((endTime.getTime() - this.startTime.getTime()) / 1000)
-      )
+    const answerTime = Math.round(
+      Math.floor((endTime.getTime() - this.startTime.getTime()) / 1000)
     );
 
+    this.answerTimesSeconds.push(answerTime);
     this.startTime = undefined;
+
+    return answerTime;
   }
 
   /**
@@ -38,8 +39,13 @@ export class Metrics {
    */
   public trackWordsFromResponse(response: string) {
     const words = response.split(" ");
+    const responseWordCount: Record<string, number> = {};
+
     for (const word of words) {
       this.wordCount[word] = (this.wordCount[word] || 0) + 1;
+      responseWordCount[word] = (responseWordCount[word] || 0) + 1;
     }
+
+    return responseWordCount;
   }
 }

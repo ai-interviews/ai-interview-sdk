@@ -41,7 +41,6 @@ export class Interviewer {
   private currentQuestionIndex: number;
 
   // List of questions (in-order) that interviewer will ask
-  // These are chosen internally (see init()), partly by LLM and from questionBank at random
   private questions: string[];
 
   // LLM will refer to candidate by name if provided

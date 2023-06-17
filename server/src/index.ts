@@ -5,6 +5,7 @@ import { createServer } from "http";
 import { initializeSpeechToText, textToSpeech } from "./lib/speech.ts";
 import { Interviewer } from "./lib/interviewer.ts";
 import { Metrics } from "./lib/metrics.ts";
+import { emitToSocket } from "./lib/emitToSocket.ts";
 
 const app = express();
 const server = createServer(app);
@@ -27,20 +28,42 @@ io.on("connection", async (socket) => {
   await interviewer.init();
 
   // Ask ice-breaker question to candidate
+  const openerQuestion = await interviewer.getNextQuestion("");
   const openerAudioData = await textToSpeech({
-    text: await interviewer.getNextQuestion(""),
+    text: openerQuestion,
   });
 
-  socket.emit("audioData", openerAudioData);
+  // Emit opener questin to client
+  emitToSocket(socket, {
+    event: "audio",
+    data: {
+      text: openerQuestion,
+      buffer: openerAudioData,
+    },
+  });
 
   // Audio stream from the frontend to be directed into pushStream
   let candidateResponse = "";
   const { pushStream, speechRecognizer } = initializeSpeechToText({
     onSpeechRecognized: (candidateResponseFragment) => {
       candidateResponse += " " + candidateResponseFragment;
+
+      emitToSocket(socket, {
+        event: "speechRecognized",
+        data: {
+          text: candidateResponse,
+        },
+      });
     },
-    onSpeechRecognizing: () => {
+    onSpeechRecognizing: (text: string) => {
       metrics.startAnswerTimer();
+
+      emitToSocket(socket, {
+        event: "speechRecognized",
+        data: {
+          text: candidateResponse + text,
+        },
+      });
     },
   });
 
@@ -64,8 +87,13 @@ io.on("connection", async (socket) => {
     }
 
     // Track metrics from this response
-    metrics.endAnswerTimer();
-    metrics.trackWordsFromResponse(candidateResponse);
+    const answerTimeSeconds = metrics.endAnswerTimer();
+    const wordCount = metrics.trackWordsFromResponse(candidateResponse);
+
+    emitToSocket(socket, {
+      event: "responseMetrics",
+      data: { wordCount, answerTimeSeconds },
+    });
 
     console.log("PROMPT:", candidateResponse);
 
@@ -75,9 +103,15 @@ io.on("connection", async (socket) => {
 
     console.log("RESPONSE:", nextQuestionForCandidate);
 
-    const audioData = textToSpeech({ text: nextQuestionForCandidate });
+    const audioData = await textToSpeech({ text: nextQuestionForCandidate });
 
-    socket.emit("audioData", audioData);
+    emitToSocket(socket, {
+      event: "audio",
+      data: {
+        text: nextQuestionForCandidate,
+        buffer: audioData,
+      },
+    });
 
     // Reset candidate response
     candidateResponse = "";
@@ -89,9 +123,13 @@ io.on("connection", async (socket) => {
       console.log("Speech recognition stopped.");
     });
 
-    // Send metrics to client
     const { wordCount, answerTimesSeconds } = metrics;
-    socket.emit("metrics", { wordCount, answerTimesSeconds });
+
+    // Send metrics to client
+    emitToSocket(socket, {
+      event: "interviewMetrics",
+      data: { wordCount, answerTimesSeconds },
+    });
 
     socket.disconnect();
   });
