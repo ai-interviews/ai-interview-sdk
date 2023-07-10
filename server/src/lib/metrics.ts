@@ -18,7 +18,6 @@ export class Metrics {
    */
   public startQuietTimeTimer() {
     if (!this.quietStartTime) {
-      console.log("start quiet time");
       this.quietStartTime = new Date();
     }
   }
@@ -60,8 +59,6 @@ export class Metrics {
     if (!this.quietStartTime) {
       return this.quietTimeSeconds;
     }
-
-    console.log("end quiet time");
 
     const endTime = new Date();
 
