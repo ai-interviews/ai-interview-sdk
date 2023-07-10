@@ -1,24 +1,27 @@
 {
   "compilerOptions": {
     "outDir": "dist/",
+    "rootDir": ".",
     "sourceMap": true,
-    "module": "es2022",
+    "module": "ES2022",
     "moduleResolution": "Node",
     "noEmitOnError": true,
-    "target": "es2022",
+    "target": "ES2022",
     "declaration": true,
     "removeComments": false,
     "noImplicitAny": true,
     "forceConsistentCasingInFileNames": true,
-    // "noUnusedLocals": true,
     "pretty": true,
     "esModuleInterop": true,
     "noEmit": true,
-    "allowImportingTsExtensions": true,
-    "lib": ["DOM"]
+    "lib": ["ES2022"]
   },
   "ts-node": {
-    "esm": true
+    "esm": true,
+    "experimentalSpecifierResolution": "node",
+    "files": true
   },
-  "include": ["src", "constants", "lib"]
+  "files": ["./environment.d.ts"],
+  "include": ["src", "environment.d.ts", "pgtyped.config.ts"],
+  "exclude": ["node_modules"]
 }

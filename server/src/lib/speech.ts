@@ -8,6 +8,7 @@ import {
   AudioStreamFormat,
   SpeechSynthesizer,
 } from "microsoft-cognitiveservices-speech-sdk";
+import { InterviewerVoice } from "./interviewer";
 
 const speechConfig = SpeechConfig.fromSubscription(
   process.env.AZURE_COGNITIVE_SERVICES_SPEECH_KEY!,
@@ -74,14 +75,16 @@ export const initializeSpeechToText = ({
  */
 export const textToSpeech = async ({
   text,
+  voice = "en-CA-LiamNeural",
 }: {
   text: string;
+  voice?: InterviewerVoice;
 }): Promise<ArrayBuffer> => {
   const synthesizer = new SpeechSynthesizer(speechConfig);
 
   return new Promise((resolve, reject) => {
     synthesizer.speakSsmlAsync(
-      generateSsml(text),
+      generateSsml({ voice, text }),
       (result) => {
         synthesizer.close();
 
@@ -97,11 +100,11 @@ export const textToSpeech = async ({
   });
 };
 
-const generateSsml = (text: string) => `
+const generateSsml = ({ voice, text }: { voice: string; text: string }) => `
   <speak version="1.0" xmlns="https://www.w3.org/2001/10/synthesis" xmlns:mstts="https://www.w3.org/2001/mstts" xml:lang="en-US">
-    <voice name="en-US-DavisNeural">
+    <voice name="${voice}">
       <mstts:express-as style="cheerful" styledegree="1">
-        <prosody rate="+10.00%">
+        <prosody rate="+8.00%">
           ${text}
         </prosody>
       </mstts:express-as>

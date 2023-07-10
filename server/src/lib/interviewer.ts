@@ -1,7 +1,7 @@
 import { ConversationChain } from "langchain/chains";
-import { Questions } from "../constants/questions.ts";
-import { callOpenAi, initializeOpenAi } from "./openai.ts";
-import { Prompts } from "../constants/prompts.ts";
+import { Questions } from "../constants/questions";
+import { callOpenAi, initializeOpenAi } from "./openai";
+import { Prompts } from "../constants/prompts";
 
 /**
  *
@@ -27,6 +27,20 @@ const shuffle = (array: string[]) => {
   return array;
 };
 
+export const interviewerVoices = [
+  "en-CA-ClaraNeural",
+  "en-CA-LiamNeural",
+] as const;
+
+export type InterviewerVoice = (typeof interviewerVoices)[number];
+
+export type InterviewerOptions = {
+  name?: string;
+  age?: number;
+  bio?: string;
+  voice?: InterviewerVoice;
+};
+
 export class Interviewer {
   // Used to call OpenAI
   private chain: ConversationChain;
@@ -34,17 +48,20 @@ export class Interviewer {
   // Number of required questions to pull from question bank
   private numRequiredQuestions: number;
 
-  // Question bank of possible questions for interviewer to ask
+  // Question bank of possible questions for interviewerOptions to ask
   private questionBank: string[];
 
   // Index of question to ask next
   private currentQuestionIndex: number;
 
-  // List of questions (in-order) that interviewer will ask
+  // List of questions (in-order) that interviewerOptions will ask
   private questions: string[];
 
   // LLM will refer to candidate by name if provided
   private candidateName?: string;
+
+  // LLM will be prompted take on this background if provided
+  private interviewerOptions?: InterviewerOptions;
 
   /**
    *
@@ -56,16 +73,31 @@ export class Interviewer {
     numRequiredQuestions,
     questions,
     candidateName,
+    interviewerOptions: {
+      name = "Sasha",
+      age = 30,
+      voice = "en-CA-LiamNeural",
+      bio = Prompts.DEFAULT_BIO,
+    },
   }: {
     numRequiredQuestions: number;
     questions?: string[];
     candidateName?: string;
+    interviewerOptions?: InterviewerOptions;
   }) {
     this.numRequiredQuestions = numRequiredQuestions;
     this.questionBank = shuffle(questions || Questions.STAR_METHOD);
     this.candidateName = candidateName;
     this.currentQuestionIndex = 0;
-    this.chain = initializeOpenAi();
+    this.interviewerOptions = {
+      name,
+      age,
+      voice,
+      bio,
+    };
+    this.chain = initializeOpenAi({
+      interviewerOptions: this.interviewerOptions,
+    });
   }
 
   /**
@@ -80,11 +112,17 @@ export class Interviewer {
       Prompts.GENERATE_RESUME_QUESTION
     );
 
-    // prettier-ignore
+    const introduction =
+      "Great. " +
+      (await callOpenAi(
+        this.chain,
+        Prompts.GENERATE_INTRODUCTION({ candidateName: this.candidateName })
+      ));
+
     this.questions = [
       Questions.getOpener(this.candidateName),
       shuffle(Questions.INTERVIEW_LAYOUT)[0],
-      shuffle(Questions.INTRO)[0],
+      introduction,
       Questions.FOLLOW_UP,
       resumeQuestion,
     ];
@@ -103,10 +141,15 @@ export class Interviewer {
    * - A question from the question bank
    */
   private async generateResponse(candidateResponse: string): Promise<string> {
-    const isFollowUpQuestionGeneratedByOpenAi =
+    if (this.currentQuestionIndex <= 2) {
+      // Hardocoded responses, regardless of what candidate said
+      return this.questions[this.currentQuestionIndex++];
+    }
+
+    const isNextQuestionGeneratedByOpenAi =
       this.questions[this.currentQuestionIndex] === Questions.FOLLOW_UP;
 
-    const prompt = isFollowUpQuestionGeneratedByOpenAi
+    const prompt = isNextQuestionGeneratedByOpenAi
       ? Prompts.GENERATE_FOLLOW_UP_QUESTION
       : Prompts.GENERATE_FOLLOW_UP_COMMENT;
 
@@ -121,7 +164,7 @@ export class Interviewer {
 
     let fullResponse = "";
 
-    if (isFollowUpQuestionGeneratedByOpenAi) {
+    if (isNextQuestionGeneratedByOpenAi) {
       fullResponse = openAiResponse;
     } else {
       fullResponse = openAiResponse + this.questions[this.currentQuestionIndex];
@@ -133,15 +176,11 @@ export class Interviewer {
   /**
    *
    * @param candidateResponse Candidate's response to the previous question
-   * @returns The next question for the interviewer to ask
+   * @returns The next question for the interviewerOptions to ask
    */
   public async getNextQuestion(candidateResponse: string) {
     if (this.currentQuestionIndex === this.questions.length) {
       return;
-    }
-
-    if (this.currentQuestionIndex <= 2) {
-      return this.questions[this.currentQuestionIndex++];
     }
 
     const response = await this.generateResponse(candidateResponse);
@@ -149,5 +188,22 @@ export class Interviewer {
     this.questions[this.currentQuestionIndex++] = response;
 
     return response;
+  }
+
+  /**
+   *
+   * @returns Set interviewer options for this interview
+   */
+  public getInterviewerOptions() {
+    return this.interviewerOptions;
+  }
+
+  /**
+   *
+   * @returns Get the current interview question being asked
+   */
+  public getCurrentQuestion() {
+    const phrases = this.questions[this.currentQuestionIndex].split(".");
+    return phrases[phrases.length - 1];
   }
 }

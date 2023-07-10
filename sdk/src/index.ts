@@ -1,36 +1,15 @@
 import { io, Socket } from 'socket.io-client';
 import { audioBufferToWav } from './audioBufferToWav';
 import initLogger, { Logger } from 'pino';
-
-type InterviewMetricsEventData = {
-  wordCount: Record<string, number>;
-  answerTimesSeconds: number[];
-};
-
-type ResponseMetricsEventData = {
-  wordCount: Record<string, number>;
-  answerTimeSeconds: number;
-};
-
-export type AudioEventData = {
-  text: string;
-  buffer: ArrayBuffer;
-};
-
-type SpeechRecognizedEventData = {
-  text: string;
-};
-
-type ConstructorCallbacks = {
-  onAudio?: (data: AudioEventData) => void;
-  onSpeechRecognized?: (text: string) => void;
-  onResponseMetrics?: (metrics: ResponseMetricsEventData) => void;
-  onInterviewMetrics?: (metrics: InterviewMetricsEventData) => void;
-};
-
-type ConstructorOptions = {
-  automaticAudioPlayback?: boolean;
-};
+import {
+  InterviewerOptions,
+  ConstructorCallbacks,
+  ConstructorOptions,
+  ResponseMetricsEventData,
+  InterviewMetricsEventData,
+  SpeechRecognizedEventData,
+  AudioEventData,
+} from './types';
 
 export class Interview {
   private socket?: Socket;
@@ -38,15 +17,32 @@ export class Interview {
   private logger: Logger;
   private streaming: boolean;
   private handleSocketEvents: (socket: Socket) => void;
+  private interviewerOptions?: InterviewerOptions;
+  private candidateName?: string;
+  private candidateResume?: string;
 
   constructor(
-    { onAudio, onSpeechRecognized, onResponseMetrics, onInterviewMetrics }: ConstructorCallbacks = {},
-    { automaticAudioPlayback = true }: ConstructorOptions = {},
+    {
+      onResponseAudio,
+      onSpeechRecognized,
+      onResponseMetrics,
+      onInterviewMetrics,
+      onRecognitionStarted,
+    }: ConstructorCallbacks = {},
+    { automaticAudioPlayback = true, interviewerOptions, candidateName, candidateResume }: ConstructorOptions = {},
   ) {
     this.logger = initLogger();
     this.streaming = false;
+    this.interviewerOptions = interviewerOptions;
+    this.candidateName = candidateName;
+    this.candidateResume = candidateResume;
 
     this.handleSocketEvents = socket => {
+      // Handle speech recognition started
+      socket.on('recognitionStarted', () => {
+        onRecognitionStarted?.();
+      });
+
       // Handle metrics at the end of each candidate response
       socket.on('responseMetrics', (data: ResponseMetricsEventData) => {
         onResponseMetrics?.(data);
@@ -59,12 +55,12 @@ export class Interview {
 
       // Handle candidate speech recognized by server
       socket.on('speechRecognized', (data: SpeechRecognizedEventData) => {
-        onSpeechRecognized?.(data.text);
+        onSpeechRecognized?.(data);
       });
 
       // Handle returning audio data from server
       socket.on('audio', (data: AudioEventData) => {
-        onAudio(data);
+        onResponseAudio(data);
 
         if (automaticAudioPlayback) {
           this.playAudio(data.buffer);
@@ -77,6 +73,10 @@ export class Interview {
     const audioContext = new AudioContext();
     const buffer = await audioContext.decodeAudioData(audioData);
     const source = audioContext.createBufferSource();
+
+    setTimeout(() => {
+      this.socket.emit('questionAsked');
+    }, buffer.duration * 1000);
 
     source.buffer = buffer;
     source.connect(audioContext.destination);
@@ -94,7 +94,16 @@ export class Interview {
       }
 
       this.streaming = true;
-      this.socket = io('http://localhost:4200');
+      this.socket = io('http://localhost:4200', {
+        query: {
+          interviewerName: this.interviewerOptions.name,
+          interviewerAge: this.interviewerOptions.age,
+          interviewerVoice: this.interviewerOptions.voice,
+          interviewerBio: this.interviewerOptions.bio,
+          candidateName: this.candidateName,
+          candidateResume: this.candidateResume,
+        },
+      });
 
       // Add audio worklet module
       const audioContext = new AudioContext();

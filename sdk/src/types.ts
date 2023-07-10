@@ -1,0 +1,46 @@
+export type InterviewMetricsEventData = {
+  wordCount: Record<string, number>;
+  lengthSeconds: number;
+};
+
+export type ResponseMetricsEventData = {
+  question: string;
+  response: string;
+  wordFrequency: Record<string, number>;
+  answerTimeSeconds: number;
+  quietTimeSeconds: number;
+};
+
+export type AudioEventData = {
+  text: string;
+  buffer: ArrayBuffer;
+};
+
+export type SpeechRecognizedEventData = {
+  text: string;
+  isCompletePhrase: boolean;
+};
+
+export type InterviewerVoice = 'en-CA-ClaraNeural' | 'en-CA-LiamNeural';
+
+export type InterviewerOptions = {
+  name?: string;
+  age?: number;
+  bio?: string;
+  voice?: InterviewerVoice;
+};
+
+export type ConstructorCallbacks = {
+  onRecognitionStarted?: () => void;
+  onResponseAudio?: (data: AudioEventData) => void;
+  onSpeechRecognized?: (data: SpeechRecognizedEventData) => void;
+  onResponseMetrics?: (metrics: ResponseMetricsEventData) => void;
+  onInterviewMetrics?: (metrics: InterviewMetricsEventData) => void;
+};
+
+export type ConstructorOptions = {
+  automaticAudioPlayback?: boolean;
+  interviewerOptions?: InterviewerOptions;
+  candidateName?: string;
+  candidateResume?: string;
+};
