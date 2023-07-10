@@ -79,7 +79,7 @@ export const Prompts = {
     Do not ramble, keep it short at around the above length. Make sure to start off by explaining that you're about to give a background about yourself (like in the example: "To give you a bit of background about myself...").
     This is not a pitch for yourself. You can talk about your hobbies, but do not compliment yourself or talk about your soft skills. 
     Use casual sounding language, as if you were talking to a kid who doesn't know big words. Don't use big and formal language. 
-    As a random example, instead of saying a word like "endeavour", you could say "try". But still, try not to be hyper or overly positive, this is an intelligent and pragmatic kid. 
+    As a random example, instead of saying a word like "endeavour", you could say "try". But still, try not to be hyper or overly positive. 
     Also, ask the candidate about themself at the end, as shown in the example${candidateName ? `, and mention their name. Their name is ${candidateName}` : '.'}
   `,
 

@@ -203,7 +203,8 @@ export class Interviewer {
    * @returns Get the current interview question being asked
    */
   public getCurrentQuestion() {
-    const phrases = this.questions[this.currentQuestionIndex].split(".");
+    const phrases =
+      this.questions[Math.min(this.currentQuestionIndex - 1, 0)].split(".");
     return phrases[phrases.length - 1];
   }
 }
