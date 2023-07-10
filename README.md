@@ -8,15 +8,14 @@ Local testing instructions. Make sure you have [node](https://nodejs.org/en/down
 
 **Test the SDK**
 
-1. Create a new Node.js project
-2. Run `npm install <path/to/sdk>`
-3. Import the `Interview` class from `ai-interview-sdk`
+1. Open terminal and navigate to `sdk` directory
+2. Run `npm run build`
 
 **Run the server**
 
 1. Open terminal and navigate to `server` directory
 2. Run `npm install`
-3. Run `nodemon index.ts`
+3. Run `npm run dev`
 
 ## Directory structure
 
