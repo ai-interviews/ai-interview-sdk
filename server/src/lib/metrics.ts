@@ -62,9 +62,11 @@ export class Metrics {
 
     const endTime = new Date();
 
-    const quietTimeSeconds = Math.round(
-      Math.floor((endTime.getTime() - this.quietStartTime.getTime()) / 1000)
-    );
+    const quietTimeSeconds =
+      Math.round(
+        Math.floor((endTime.getTime() - this.quietStartTime.getTime()) / 1000) *
+          100
+      ) / 100;
 
     this.quietStartTime = undefined;
     this.quietTimeSeconds += quietTimeSeconds;
