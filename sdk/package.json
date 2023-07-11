@@ -1,6 +1,6 @@
 {
   "name": "ai-interview-sdk",
-  "version": "1.0.0",
+  "version": "1.0.1",
   "scripts": {
     "test": "jest --detectOpenHandles",
     "typecheck": "tsc --project ./tsconfig-typecheck.json",
@@ -12,9 +12,7 @@
   "main": "dist/index.js",
   "typings": "dist/index.d.ts",
   "license": "MIT",
-  "files": [
-    "dist/"
-  ],
+  "files": ["dist/"],
   "devDependencies": {
     "@types/babel__core": "^7.20.1",
     "@types/babel__generator": "^7.6.4",
