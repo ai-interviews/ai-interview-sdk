@@ -1,5 +1,5 @@
 # Choose a base image
-FROM node:14
+FROM node:18
 
 # Make a directory in the image
 WORKDIR /usr/src/app
