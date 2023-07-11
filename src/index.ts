@@ -113,8 +113,8 @@ export class Interview {
           ...(this.interviewerOptions.bio && { interviewerBio: this.interviewerOptions.bio }),
           ...(this.candidateName && { candidateName: this.candidateName }),
           ...(this.candidateResume && { candidateResume: this.candidateResume }),
-          ...(this.jobOptions.title && { jobTitle: this.jobOptions.title }),
-          ...(this.jobOptions.description && { jobDescription: this.jobOptions.description }),
+          ...(this.jobOptions?.title && { jobTitle: this.jobOptions.title }),
+          ...(this.jobOptions?.description && { jobDescription: this.jobOptions.description }),
         },
       });
 
