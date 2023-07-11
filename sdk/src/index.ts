@@ -94,7 +94,7 @@ export class Interview {
       }
 
       this.streaming = true;
-      this.socket = io('http://localhost:4200', {
+      this.socket = io('http://interviewservercontainer.eastus.azurecontainer.io:4200', {
         query: {
           interviewerName: this.interviewerOptions.name,
           interviewerAge: this.interviewerOptions.age,
