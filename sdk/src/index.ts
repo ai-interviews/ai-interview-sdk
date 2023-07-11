@@ -94,7 +94,7 @@ export class Interview {
       }
 
       this.streaming = true;
-      this.socket = io('http://interviewservercontainer.eastus.azurecontainer.io:4200', {
+      this.socket = io('https://ai-interviews.azurewebsites.net/', {
         query: {
           interviewerName: this.interviewerOptions.name,
           interviewerAge: this.interviewerOptions.age,
