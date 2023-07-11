@@ -52,6 +52,6 @@ stages:
         scriptType: 'bash'
         scriptLocation: 'inlineScript'
         inlineScript: |
-          az container create --resource-group InternProject --name serverinstance --image $(containerRegistry)/$(imageRepository):$(tag) --dns-name-label interviewservercontainer --ports 4200 --registry-username $(acrUsername) --registry-password $(acrPassword) --environment-variables OPENAI_API_KEY=$(openaiApiKey) AZURE_COGNITIVE_SERVICES_SPEECH_KEY=$(azureCognitiveServicesSpeechKey) 
-          az container show --resource-group InternProject --name serverinstance --query ipAddress.fqdn
+          az container create --resource-group InternProject --name sdkserverinstance --image $(containerRegistry)/$(imageRepository):$(tag) --dns-name-label interviewservercontainer --ports 4200 --registry-username $(acrUsername) --registry-password $(acrPassword) --environment-variables OPENAI_API_KEY=$(openaiApiKey) AZURE_COGNITIVE_SERVICES_SPEECH_KEY=$(azureCognitiveServicesSpeechKey) 
+          az container show --resource-group InternProject --name sdkserverinstance --query ipAddress.fqdn
 
