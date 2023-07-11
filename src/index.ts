@@ -104,8 +104,7 @@ export class Interview {
       }
 
       this.streaming = true;
-      // this.socket = io('https://ai-interviews.azurewebsites.net/', {
-      this.socket = io('http://localhost:8080/', {
+      this.socket = io('https://ai-interviews.azurewebsites.net/', {
         query: {
           ...(this.interviewerOptions.name && { interviewerName: this.interviewerOptions.name }),
           ...(this.interviewerOptions.age && { interviewerAge: this.interviewerOptions.age }),
