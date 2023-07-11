@@ -9,6 +9,7 @@ import {
   InterviewMetricsEventData,
   SpeechRecognizedEventData,
   AudioEventData,
+  JobOptions,
 } from './types';
 
 export class Interview {
@@ -20,6 +21,7 @@ export class Interview {
   private interviewerOptions?: InterviewerOptions;
   private candidateName?: string;
   private candidateResume?: string;
+  private jobOptions?: JobOptions;
   private audioSource?: AudioBufferSourceNode;
 
   constructor(
@@ -30,13 +32,20 @@ export class Interview {
       onInterviewMetrics,
       onRecognitionStarted,
     }: ConstructorCallbacks = {},
-    { automaticAudioPlayback = true, interviewerOptions, candidateName, candidateResume }: ConstructorOptions = {},
+    {
+      automaticAudioPlayback = true,
+      interviewerOptions,
+      jobOptions,
+      candidateName,
+      candidateResume,
+    }: ConstructorOptions = {},
   ) {
     this.logger = initLogger();
     this.streaming = false;
     this.interviewerOptions = interviewerOptions;
     this.candidateName = candidateName;
     this.candidateResume = candidateResume;
+    this.jobOptions = jobOptions;
 
     this.handleSocketEvents = socket => {
       // Handle speech recognition started
@@ -95,14 +104,17 @@ export class Interview {
       }
 
       this.streaming = true;
-      this.socket = io('https://ai-interviews.azurewebsites.net/', {
+      // this.socket = io('https://ai-interviews.azurewebsites.net/', {
+      this.socket = io('http://localhost:8080/', {
         query: {
-          interviewerName: this.interviewerOptions.name,
-          interviewerAge: this.interviewerOptions.age,
-          interviewerVoice: this.interviewerOptions.voice,
-          interviewerBio: this.interviewerOptions.bio,
-          candidateName: this.candidateName,
-          candidateResume: this.candidateResume,
+          ...(this.interviewerOptions.name && { interviewerName: this.interviewerOptions.name }),
+          ...(this.interviewerOptions.age && { interviewerAge: this.interviewerOptions.age }),
+          ...(this.interviewerOptions.voice && { interviewerVoice: this.interviewerOptions.voice }),
+          ...(this.interviewerOptions.bio && { interviewerBio: this.interviewerOptions.bio }),
+          ...(this.candidateName && { candidateName: this.candidateName }),
+          ...(this.candidateResume && { candidateResume: this.candidateResume }),
+          ...(this.jobOptions.title && { jobTitle: this.jobOptions.title }),
+          ...(this.jobOptions.description && { jobDescription: this.jobOptions.description }),
         },
       });
 

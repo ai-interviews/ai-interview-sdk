@@ -30,6 +30,11 @@ export type InterviewerOptions = {
   voice?: InterviewerVoice;
 };
 
+export type JobOptions = {
+  title: string;
+  description: string;
+};
+
 export type ConstructorCallbacks = {
   onRecognitionStarted?: () => void;
   onResponseAudio?: (data: AudioEventData) => void;
@@ -41,6 +46,7 @@ export type ConstructorCallbacks = {
 export type ConstructorOptions = {
   automaticAudioPlayback?: boolean;
   interviewerOptions?: InterviewerOptions;
+  jobOptions?: JobOptions;
   candidateName?: string;
   candidateResume?: string;
 };
