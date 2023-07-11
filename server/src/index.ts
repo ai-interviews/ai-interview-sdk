@@ -178,7 +178,7 @@ io.on("connection", async (socket) => {
   });
 });
 
-const PORT = 4200;
+const PORT = 8080;
 server.listen(PORT, () => {
   console.log(`Server listening on port ${PORT}`);
 });

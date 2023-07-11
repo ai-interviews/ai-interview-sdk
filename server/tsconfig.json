@@ -13,8 +13,8 @@
     "forceConsistentCasingInFileNames": true,
     "pretty": true,
     "esModuleInterop": true,
-    "noEmit": true,
-    "lib": ["ES2022"]
+    "lib": ["ES2022"],
+    "skipLibCheck": true
   },
   "ts-node": {
     "esm": true,
@@ -22,6 +22,6 @@
     "files": true
   },
   "files": ["./environment.d.ts"],
-  "include": ["src", "environment.d.ts", "pgtyped.config.ts"],
+  "include": ["src", "environment.d.ts"],
   "exclude": ["node_modules"]
 }
