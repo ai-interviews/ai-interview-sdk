@@ -2,39 +2,17 @@
 
 Early phase (still in development) of JavaScript interview browser SDK to run AI-powered interviews
 
-## Environment Setup
+## Quick start
 
-Local testing instructions. Make sure you have [node](https://nodejs.org/en/download) installed on your machine first and have the repo cloned.
+Coming soon
 
-**Test the SDK**
+## Code
 
-1. Open terminal and navigate to `sdk` directory
-2. Run `npm run build`
-
-**Run the server**
-
-1. Open terminal and navigate to `server` directory
-2. Run `npm install`
-3. Run `npm run dev`
-
-## Directory structure
-
-#### `server` directory
-
-Express server that handles incoming socket connection from SDK and all conversational logic. To be deployed.
-
-- `index.ts` is the main entry point
-- `openai.ts` initializes the chat SDK and provides a helper
-- `speech.ts` initializes the Azure Speech SDK and provides helpers
-
-#### `sdk` directory
-
-Code for the SDK to be integrated into any web platform. This calls our own server. To be published on NPM directory.
+SDK can be integrated into any web app. SDK opens a websocket with our own server which handles the interview logic.
 
 - `index.ts` export Interview class for SDK usage
 - `audioBufferToWav.ts` helper to convert `webm` audio chunks to `wav`
 - `audio-worklet-processor.js` handle and pass on chunks of the incoming audio stream
-- `__tests__` for unit tests to be added to (not yet started)
 
 ## Process diagram
 
