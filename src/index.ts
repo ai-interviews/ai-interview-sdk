@@ -20,6 +20,7 @@ export class Interview {
   private interviewerOptions?: InterviewerOptions;
   private candidateName?: string;
   private candidateResume?: string;
+  private audioSource?: AudioBufferSourceNode;
 
   constructor(
     {
@@ -72,15 +73,15 @@ export class Interview {
   private async playAudio(audioData: ArrayBuffer) {
     const audioContext = new AudioContext();
     const buffer = await audioContext.decodeAudioData(audioData);
-    const source = audioContext.createBufferSource();
+    this.audioSource = audioContext.createBufferSource();
 
     setTimeout(() => {
       this.socket.emit('questionAsked');
     }, buffer.duration * 1000);
 
-    source.buffer = buffer;
-    source.connect(audioContext.destination);
-    source.start();
+    this.audioSource.buffer = buffer;
+    this.audioSource.connect(audioContext.destination);
+    this.audioSource.start();
   }
 
   private async streamAudioData() {
@@ -168,13 +169,19 @@ export class Interview {
         throw Error('No session is in progress.');
       }
 
+      // Stop playing audio
+      if (this.audioSource) {
+        this.audioSource.stop();
+      }
+
       this.streaming = false;
 
+      // Stop recording audio
       this.stream.getTracks().forEach(track => {
         track.stop();
       });
 
-      // Tell the backend to stop listening
+      // Tell the backend to stop listening for audio
       this.socket.emit('stopRecording');
     } catch (error) {
       this.logger.error('Error stopping interview session:', error);
