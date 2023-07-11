@@ -1,6 +1,6 @@
 {
   "name": "ai-interview-sdk",
-  "version": "1.0.1",
+  "version": "1.0.2",
   "scripts": {
     "typecheck": "tsc --project ./tsconfig-typecheck.json",
     "lint": "eslint \"src/**/*.{ts,tsx}\"",
