@@ -72,7 +72,7 @@ export class Interview {
       socket.on('audio', (data: AudioEventData) => {
         onResponseAudio(data);
 
-        if (automaticAudioPlayback) {
+        if (automaticAudioPlayback && this.streaming) {
           this.playAudio(data.buffer);
         }
       });
@@ -93,7 +93,7 @@ export class Interview {
     this.audioSource.start();
   }
 
-  private async streamAudioData() {
+  private async beginStreamingAudioData() {
     try {
       if (this.streaming) {
         throw Error('Session is already in progress.');
@@ -162,7 +162,7 @@ export class Interview {
     try {
       this.stream = await navigator.mediaDevices.getUserMedia({ audio: true });
 
-      await this.streamAudioData();
+      await this.beginStreamingAudioData();
 
       if (!this.socket) {
         throw Error('Socket connection not established.');
@@ -180,12 +180,12 @@ export class Interview {
         throw Error('No session is in progress.');
       }
 
+      this.streaming = false;
+
       // Stop playing audio
       if (this.audioSource) {
         this.audioSource.stop();
       }
-
-      this.streaming = false;
 
       // Stop recording audio
       this.stream.getTracks().forEach(track => {
