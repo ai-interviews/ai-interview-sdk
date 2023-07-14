@@ -10,6 +10,7 @@ import {
   SpeechRecognizedEventData,
   AudioEventData,
   JobOptions,
+  InterviewEndEventData,
 } from './types';
 
 export class Interview {
@@ -31,6 +32,7 @@ export class Interview {
       onResponseMetrics,
       onInterviewMetrics,
       onRecognitionStarted,
+      onInterviewEnd,
     }: ConstructorCallbacks = {},
     {
       automaticAudioPlayback = true,
@@ -64,15 +66,20 @@ export class Interview {
 
       // Handle metrics at the end of the interview
       socket.on('interviewMetrics', (data: InterviewMetricsEventData) => {
-        if (this.streaming) {
-          onInterviewMetrics?.(data);
-        }
+        onInterviewMetrics?.(data);
       });
 
       // Handle candidate speech recognized by server
       socket.on('speechRecognized', (data: SpeechRecognizedEventData) => {
         if (this.streaming) {
           onSpeechRecognized?.(data);
+        }
+      });
+
+      // Handle candidate speech recognized by server
+      socket.on('interviewEnd', (data: InterviewEndEventData) => {
+        if (this.streaming) {
+          onInterviewEnd?.(data);
         }
       });
 
