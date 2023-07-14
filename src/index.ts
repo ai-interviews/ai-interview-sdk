@@ -50,30 +50,40 @@ export class Interview {
     this.handleSocketEvents = socket => {
       // Handle speech recognition started
       socket.on('recognitionStarted', () => {
-        onRecognitionStarted?.();
+        if (this.streaming) {
+          onRecognitionStarted?.();
+        }
       });
 
       // Handle metrics at the end of each candidate response
       socket.on('responseMetrics', (data: ResponseMetricsEventData) => {
-        onResponseMetrics?.(data);
+        if (this.streaming) {
+          onResponseMetrics?.(data);
+        }
       });
 
       // Handle metrics at the end of the interview
       socket.on('interviewMetrics', (data: InterviewMetricsEventData) => {
-        onInterviewMetrics?.(data);
+        if (this.streaming) {
+          onInterviewMetrics?.(data);
+        }
       });
 
       // Handle candidate speech recognized by server
       socket.on('speechRecognized', (data: SpeechRecognizedEventData) => {
-        onSpeechRecognized?.(data);
+        if (this.streaming) {
+          onSpeechRecognized?.(data);
+        }
       });
 
       // Handle returning audio data from server
       socket.on('audio', (data: AudioEventData) => {
-        onResponseAudio(data);
+        if (this.streaming) {
+          onResponseAudio(data);
 
-        if (automaticAudioPlayback && this.streaming) {
-          this.playAudio(data.buffer);
+          if (automaticAudioPlayback) {
+            this.playAudio(data.buffer);
+          }
         }
       });
     };
