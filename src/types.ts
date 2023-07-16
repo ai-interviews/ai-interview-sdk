@@ -9,6 +9,7 @@ export type ResponseMetricsEventData = {
   wordFrequency: Record<string, number>;
   answerTimeSeconds: number;
   quietTimeSeconds: number;
+  quantifiedMetric: number;
 };
 
 export type AudioEventData = {
