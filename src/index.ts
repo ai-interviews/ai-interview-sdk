@@ -10,6 +10,7 @@ import {
   SpeechRecognizedEventData,
   AudioEventData,
   JobOptions,
+  InterviewEndEventData,
 } from './types';
 
 export class Interview {
@@ -17,12 +18,15 @@ export class Interview {
   private stream?: MediaStream;
   private logger: Logger;
   private streaming: boolean;
+  private listening: boolean;
   private handleSocketEvents: (socket: Socket) => void;
   private interviewerOptions?: InterviewerOptions;
   private candidateName?: string;
   private candidateResume?: string;
   private jobOptions?: JobOptions;
   private audioSource?: AudioBufferSourceNode;
+  private onInterviewerFinishedSpeaking?: () => void;
+  private textOnly?: boolean;
 
   constructor(
     {
@@ -31,6 +35,8 @@ export class Interview {
       onResponseMetrics,
       onInterviewMetrics,
       onRecognitionStarted,
+      onInterviewEnd,
+      onInterviewerFinishedSpeaking,
     }: ConstructorCallbacks = {},
     {
       automaticAudioPlayback = true,
@@ -38,6 +44,7 @@ export class Interview {
       jobOptions,
       candidateName,
       candidateResume,
+      textOnly,
     }: ConstructorOptions = {},
   ) {
     this.logger = initLogger();
@@ -46,6 +53,9 @@ export class Interview {
     this.candidateName = candidateName;
     this.candidateResume = candidateResume;
     this.jobOptions = jobOptions;
+    this.onInterviewerFinishedSpeaking = onInterviewerFinishedSpeaking;
+    this.listening = false;
+    this.textOnly = textOnly;
 
     this.handleSocketEvents = socket => {
       // Handle speech recognition started
@@ -64,15 +74,20 @@ export class Interview {
 
       // Handle metrics at the end of the interview
       socket.on('interviewMetrics', (data: InterviewMetricsEventData) => {
-        if (this.streaming) {
-          onInterviewMetrics?.(data);
-        }
+        onInterviewMetrics?.(data);
       });
 
       // Handle candidate speech recognized by server
       socket.on('speechRecognized', (data: SpeechRecognizedEventData) => {
         if (this.streaming) {
           onSpeechRecognized?.(data);
+        }
+      });
+
+      // Handle candidate speech recognized by server
+      socket.on('interviewEnd', (data: InterviewEndEventData) => {
+        if (this.streaming) {
+          onInterviewEnd?.(data);
         }
       });
 
@@ -90,12 +105,16 @@ export class Interview {
   }
 
   private async playAudio(audioData: ArrayBuffer) {
+    this.listening = false;
+
     const audioContext = new AudioContext();
     const buffer = await audioContext.decodeAudioData(audioData);
     this.audioSource = audioContext.createBufferSource();
 
     setTimeout(() => {
       this.socket.emit('questionAsked');
+      this.onInterviewerFinishedSpeaking?.();
+      this.listening = true;
     }, buffer.duration * 1000);
 
     this.audioSource.buffer = buffer;
@@ -103,30 +122,32 @@ export class Interview {
     this.audioSource.start();
   }
 
+  private createSocketConnection() {
+    if (this.streaming) {
+      throw Error('Session is already in progress.');
+    }
+
+    if (!this.stream) {
+      throw Error('No stream instance found. Check the console for errors.');
+    }
+
+    this.streaming = true;
+    this.socket = io('https://ai-interviews.azurewebsites.net/', {
+      query: {
+        ...(this.interviewerOptions.name && { interviewerName: this.interviewerOptions.name }),
+        ...(this.interviewerOptions.age && { interviewerAge: this.interviewerOptions.age }),
+        ...(this.interviewerOptions.voice && { interviewerVoice: this.interviewerOptions.voice }),
+        ...(this.interviewerOptions.bio && { interviewerBio: this.interviewerOptions.bio }),
+        ...(this.candidateName && { candidateName: this.candidateName }),
+        ...(this.candidateResume && { candidateResume: this.candidateResume }),
+        ...(this.jobOptions?.title && { jobTitle: this.jobOptions.title }),
+        ...(this.jobOptions?.description && { jobDescription: this.jobOptions.description }),
+      },
+    });
+  }
+
   private async beginStreamingAudioData() {
     try {
-      if (this.streaming) {
-        throw Error('Session is already in progress.');
-      }
-
-      if (!this.stream) {
-        throw Error('No stream instance found. Check the console for errors.');
-      }
-
-      this.streaming = true;
-      this.socket = io('http://localhost:8080', {
-        query: {
-          ...(this.interviewerOptions.name && { interviewerName: this.interviewerOptions.name }),
-          ...(this.interviewerOptions.age && { interviewerAge: this.interviewerOptions.age }),
-          ...(this.interviewerOptions.voice && { interviewerVoice: this.interviewerOptions.voice }),
-          ...(this.interviewerOptions.bio && { interviewerBio: this.interviewerOptions.bio }),
-          ...(this.candidateName && { candidateName: this.candidateName }),
-          ...(this.candidateResume && { candidateResume: this.candidateResume }),
-          ...(this.jobOptions?.title && { jobTitle: this.jobOptions.title }),
-          ...(this.jobOptions?.description && { jobDescription: this.jobOptions.description }),
-        },
-      });
-
       // Add audio worklet module
       const audioContext = new AudioContext();
       const audioWorkletUrl = new URL('./audio-worklet-processor.js', import.meta.url);
@@ -144,7 +165,9 @@ export class Interview {
         const wavBuffer = audioBufferToWav(audioBuffer);
 
         // Stream audio data chunk to server
-        this.socket.emit('audioData', wavBuffer);
+        if (this.listening) {
+          this.socket.emit('audioData', wavBuffer);
+        }
       };
 
       audioSource.connect(audioWorkletNode);
@@ -160,9 +183,9 @@ export class Interview {
     return this.streaming;
   }
 
-  public finishedSpeaking() {
+  public finishedSpeaking(text?: string) {
     try {
-      this.socket.emit('finishedSpeaking');
+      this.socket.emit('finishedSpeaking', text);
     } catch (error) {
       this.logger.error('Error emitting finished speaking signal:', error);
     }
@@ -172,7 +195,11 @@ export class Interview {
     try {
       this.stream = await navigator.mediaDevices.getUserMedia({ audio: true });
 
-      await this.beginStreamingAudioData();
+      this.createSocketConnection();
+
+      if (!this.textOnly) {
+        await this.beginStreamingAudioData();
+      }
 
       if (!this.socket) {
         throw Error('Socket connection not established.');

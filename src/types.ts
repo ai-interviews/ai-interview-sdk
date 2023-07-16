@@ -22,6 +22,10 @@ export type SpeechRecognizedEventData = {
   isCompletePhrase: boolean;
 };
 
+export type InterviewEndEventData = {
+  feedback: string;
+};
+
 export type InterviewerVoice = 'en-CA-ClaraNeural' | 'en-CA-LiamNeural';
 
 export type InterviewerOptions = {
@@ -42,6 +46,8 @@ export type ConstructorCallbacks = {
   onSpeechRecognized?: (data: SpeechRecognizedEventData) => void;
   onResponseMetrics?: (metrics: ResponseMetricsEventData) => void;
   onInterviewMetrics?: (metrics: InterviewMetricsEventData) => void;
+  onInterviewEnd?: (metrics: InterviewEndEventData) => void;
+  onInterviewerFinishedSpeaking?: () => void;
 };
 
 export type ConstructorOptions = {
@@ -50,4 +56,5 @@ export type ConstructorOptions = {
   jobOptions?: JobOptions;
   candidateName?: string;
   candidateResume?: string;
+  textOnly?: boolean;
 };
