@@ -1,6 +1,7 @@
 export type InterviewMetricsEventData = {
   wordCount: Record<string, number>;
   lengthSeconds: number;
+  feedback: string;
 };
 
 export type ResponseMetricsEventData = {
@@ -21,9 +22,7 @@ export type SpeechRecognizedEventData = {
   isCompletePhrase: boolean;
 };
 
-export type InterviewEndEventData = {
-  feedback: string;
-};
+export type InterviewEndEventData = Record<string, never>;
 
 export type InterviewerVoice = 'en-CA-ClaraNeural' | 'en-CA-LiamNeural';
 
