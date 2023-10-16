@@ -1,6 +1,6 @@
 ## AI interview bot
 
-Early phase (still in development) of JavaScript interview browser SDK to run AI-powered interviews
+Early phase of JavaScript interview browser SDK to run AI-powered interviews
 
 ## Quick start
 
